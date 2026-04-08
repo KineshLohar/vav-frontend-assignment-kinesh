@@ -3,20 +3,51 @@ import { NavLink } from 'react-router';
 import { getJobStatus } from '../lib/utils';
 import { useJobsStore } from '../store/jobs.store';
 import { Table, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
+import { useState } from 'react';
 
 const PostedJobs = ({ type }) => {
   const { jobs } = useJobsStore();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   console.log("JOBS", jobs);
 
 
   const showRecently = type === 'recent';
 
+  const filteredJobs = jobs?.filter((job) => {
+    const { status } = getJobStatus(job.expiryDate);
+
+    const statusMatches = statusFilter === "all" || statusFilter === status;
+
+    const searchMatches = job.title.toLowerCase().includes(searchTerm.toLowerCase());
+
+    return statusMatches && searchMatches;
+  });
+
   return (
     <div className='w-full py-3'>
       <div className='flex items-center justify-between mb-2'>
         <h4 className='font-medium text-neutral-600'>{showRecently ? 'Recently Posted Jobs' : 'My Jobs'}</h4>
         {showRecently && <NavLink to="/jobs" className='text-neutral-400' >View all</NavLink>}
+      </div>
+      <div className='flex flex-col md:flex-row gap-4 md:items-center md:justify-between mb-2'>
+        <input
+          type="text"
+          placeholder="Search jobs..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="px-3 py-2 border  border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+        />
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+        >
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="expired">Expired</option>
+        </select>
       </div>
 
       <Table className="overflow-scroll">
@@ -26,8 +57,9 @@ const PostedJobs = ({ type }) => {
           <TableHead className='text-neutral-500'>Applications</TableHead>
           <TableHead className='min-w-32 rounded-tr-lg rounded-br-lg text-neutral-500'>Actions</TableHead>
         </TableHeader>
-        {
-          jobs?.length > 0 && jobs?.map((job) => {
+
+        {filteredJobs?.length > 0 ? (
+          filteredJobs.map((job) => {
             const { status, daysRemaining } = getJobStatus(job.expiryDate);
             return (
               <TableRow key={job.id} className='overflow-x-auto'>
@@ -69,7 +101,13 @@ const PostedJobs = ({ type }) => {
                   </div>
                 </TableCell>
               </TableRow>)
-          })
+          })) : (
+          <TableRow>
+            <TableCell colSpan={4} className='text-center text-neutral-500 py-4'>
+              No jobs found.
+            </TableCell>
+          </TableRow>
+        )
         }
       </Table>
     </div>
