@@ -1,8 +1,8 @@
-import React from 'react'
-import { SIDEBAR_ROUTES } from '../lib/CONSTANTS'
+import React from 'react';
 import { NavLink } from 'react-router'
 import { LogOut } from 'lucide-react'
 import { useAuthStore } from '../store/auth.store'
+import { SIDEBAR_ROUTES } from "../lib/constants";
 
 const Sidebar = () => {
     const { logout } = useAuthStore();
